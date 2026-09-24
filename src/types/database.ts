@@ -23,6 +23,8 @@ export interface DailyLog {
 
 export interface HabitWithTodayLog extends Habit {
   todayLog: DailyLog | null
+  /** True while this habit was created offline and is waiting to sync. */
+  pending?: boolean
 }
 
 export interface Profile {

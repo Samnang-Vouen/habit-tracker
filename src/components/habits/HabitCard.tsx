@@ -32,6 +32,7 @@ export function HabitCard({ habit, onToggle, onSave, onDelete }: HabitCardProps)
   const [deleting, setDeleting] = useState(false)
 
   const completed = habit.todayLog?.completed ?? false
+  const pending = habit.pending ?? false
 
   async function handleToggle() {
     setToggling(true)
@@ -50,33 +51,49 @@ export function HabitCard({ habit, onToggle, onSave, onDelete }: HabitCardProps)
 
   return (
     <Card>
-      <CardContent className="flex items-center gap-4">
-        <Checkbox
-          checked={completed}
-          disabled={toggling}
-          onCheckedChange={handleToggle}
-          aria-label={`Mark ${habit.name} as ${completed ? 'not done' : 'done'} today`}
-        />
-
-        <div className="flex-1">
-          <p className="font-medium">{habit.name}</p>
+      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Checkbox
+            checked={completed}
+            disabled={toggling || pending}
+            onCheckedChange={handleToggle}
+            aria-label={`Mark ${habit.name} as ${completed ? 'not done' : 'done'} today`}
+          />
+          <p className="min-w-0 flex-1 truncate font-medium">{habit.name}</p>
         </div>
 
-        {toggling ? (
-          <Spinner className="size-4" />
-        ) : (
-          <Badge variant={completed ? 'default' : 'secondary'}>
-            {completed ? 'Done today' : 'Not done'}
-          </Badge>
-        )}
+        <div className="flex items-center justify-between gap-3 pl-7 sm:pl-0">
+          {toggling ? (
+            <Spinner className="size-4" />
+          ) : pending ? (
+            <Badge variant="outline">Queued</Badge>
+          ) : (
+            <Badge variant={completed ? 'default' : 'secondary'}>
+              {completed ? 'Done today' : 'Not done'}
+            </Badge>
+          )}
 
-        <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)} aria-label="Edit habit">
-          <Pencil className="size-4" />
-        </Button>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditOpen(true)}
+              disabled={pending}
+              aria-label="Edit habit"
+            >
+              <Pencil className="size-4" />
+            </Button>
 
-        <Button variant="ghost" size="icon" onClick={() => setDeleteOpen(true)} aria-label="Delete habit">
-          <Trash2 className="size-4" />
-        </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setDeleteOpen(true)}
+              aria-label="Delete habit"
+            >
+              <Trash2 className="size-4" />
+            </Button>
+          </div>
+        </div>
       </CardContent>
 
       <EditHabitDialog habit={habit} open={editOpen} onOpenChange={setEditOpen} onSave={onSave} />

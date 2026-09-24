@@ -18,6 +18,7 @@ import { HabitList } from '@/components/habits/HabitList'
 import { StatsSummary } from '@/components/habits/StatsSummary'
 import { AvatarUploadDialog } from '@/components/profile/AvatarUploadDialog'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { ShareButton } from '@/components/ShareButton'
 
 export default function Dashboard() {
   const { user, signOut } = useAuth()
@@ -30,32 +31,35 @@ export default function Dashboard() {
       <ErrorBoundary title="Navigation failed" message="The header couldn't be displayed.">
         <header className="flex items-center justify-between">
           <h1 className="text-xl font-semibold">Habit Tracker</h1>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="User menu" className="rounded-full">
-                <Avatar>
-                  <AvatarImage src={profile?.avatar_url ?? undefined} alt="Your avatar" />
-                  <AvatarFallback>
-                    <User className="size-4" />
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="text-muted-foreground truncate font-normal">
-                {user?.email}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setAvatarDialogOpen(true)}>
-                <ImageIcon className="size-4" />
-                Change avatar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()}>
-                <LogOut className="size-4" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <ShareButton />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="User menu" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="Your avatar" />
+                    <AvatarFallback>
+                      <User className="size-4" />
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="text-muted-foreground truncate font-normal">
+                  {user?.email}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setAvatarDialogOpen(true)}>
+                  <ImageIcon className="size-4" />
+                  Change avatar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()}>
+                  <LogOut className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </header>
       </ErrorBoundary>
 

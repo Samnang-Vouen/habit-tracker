@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { dequeueHabit, enqueueHabit, getQueuedHabits, type QueuedHabit } from '@/lib/offlineQueue'
 import type { DailyLog, Habit, HabitWithTodayLog } from '@/types/database'
 
 function todayDateString(): string {
@@ -10,6 +11,17 @@ function todayDateString(): string {
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
   return 'Something went wrong. Please try again.'
+}
+
+function queuedToHabit(queued: QueuedHabit): HabitWithTodayLog {
+  return {
+    id: queued.tempId,
+    user_id: queued.userId,
+    name: queued.name,
+    created_at: queued.createdAt,
+    todayLog: null,
+    pending: true,
+  }
 }
 
 export function useHabits() {
@@ -35,7 +47,10 @@ export function useHabits() {
       .returns<Habit[]>()
 
     if (habitsError) {
-      setError(getErrorMessage(habitsError))
+      // Offline with nothing cached yet: still show queued habits rather
+      // than a dead error screen.
+      setHabits(getQueuedHabits(user.id).map(queuedToHabit))
+      setError(navigator.onLine ? getErrorMessage(habitsError) : null)
       setLoading(false)
       return
     }
@@ -60,12 +75,15 @@ export function useHabits() {
       todayLogs = logRows
     }
 
-    setHabits(
-      habitRows.map((habit) => ({
+    const queuedHabits = getQueuedHabits(user.id).map(queuedToHabit)
+
+    setHabits([
+      ...habitRows.map((habit) => ({
         ...habit,
         todayLog: todayLogs.find((log) => log.habit_id === habit.id) ?? null,
       })),
-    )
+      ...queuedHabits,
+    ])
     setLoading(false)
   }, [user])
 
@@ -73,9 +91,46 @@ export function useHabits() {
     fetchHabits()
   }, [fetchHabits])
 
+  const syncQueuedHabits = useCallback(async () => {
+    if (!user || !navigator.onLine) return
+
+    const queued = getQueuedHabits(user.id)
+    if (queued.length === 0) return
+
+    for (const item of queued) {
+      const { error: insertError } = await supabase
+        .from('habits')
+        .insert({ name: item.name, user_id: item.userId })
+
+      if (!insertError) {
+        dequeueHabit(item.tempId)
+      }
+    }
+
+    await fetchHabits()
+  }, [user, fetchHabits])
+
+  useEffect(() => {
+    syncQueuedHabits()
+    window.addEventListener('online', syncQueuedHabits)
+    return () => window.removeEventListener('online', syncQueuedHabits)
+  }, [syncQueuedHabits])
+
   const addHabit = useCallback(
     async (name: string) => {
       if (!user) return { error: 'You must be signed in.' }
+
+      if (!navigator.onLine) {
+        const queued: QueuedHabit = {
+          tempId: `queued-${crypto.randomUUID()}`,
+          userId: user.id,
+          name,
+          createdAt: new Date().toISOString(),
+        }
+        enqueueHabit(queued)
+        setHabits((current) => [...current, queuedToHabit(queued)])
+        return { error: null }
+      }
 
       const { data, error: insertError } = await supabase
         .from('habits')
@@ -110,6 +165,12 @@ export function useHabits() {
   }, [])
 
   const deleteHabit = useCallback(async (habitId: string) => {
+    if (habitId.startsWith('queued-')) {
+      dequeueHabit(habitId)
+      setHabits((current) => current.filter((habit) => habit.id !== habitId))
+      return { error: null }
+    }
+
     const { error: deleteError } = await supabase.from('habits').delete().eq('id', habitId)
 
     if (deleteError) return { error: getErrorMessage(deleteError) }

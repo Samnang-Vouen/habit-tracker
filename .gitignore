@@ -29,3 +29,10 @@ dist-ssr
 *.sw?
 
 .claude
+
+# Microsoft Office lock files
+~$*.doc*
+~$*.xls*
+~$*.ppt*
+screenshots/*
+lighthouse-reports/*
