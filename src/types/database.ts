@@ -24,3 +24,9 @@ export interface DailyLog {
 export interface HabitWithTodayLog extends Habit {
   todayLog: DailyLog | null
 }
+
+export interface Profile {
+  id: string
+  avatar_url: string | null
+  updated_at: string
+}
