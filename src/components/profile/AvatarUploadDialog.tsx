@@ -129,7 +129,9 @@ export function AvatarUploadDialog({
 
         <div className="flex flex-col items-center gap-4 py-4">
           <Avatar className="size-24">
-            <AvatarImage src={displayUrl} alt="Avatar preview" />
+            {/* Only ever rendered once this dialog is opened, never part of
+                the initial page paint — safe to defer. */}
+            <AvatarImage src={displayUrl} alt="Avatar preview" loading="lazy" width={96} height={96} />
             <AvatarFallback>
               <Camera className="text-muted-foreground size-8" />
             </AvatarFallback>

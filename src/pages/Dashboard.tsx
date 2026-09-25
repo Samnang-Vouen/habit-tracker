@@ -37,7 +37,14 @@ export default function Dashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="User menu" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src={profile?.avatar_url ?? undefined} alt="Your avatar" />
+                    {/* Above the fold, part of the header's first paint — kept eager,
+                        but given explicit dimensions so it can't shift layout on load. */}
+                    <AvatarImage
+                      src={profile?.avatar_url ?? undefined}
+                      alt="Your avatar"
+                      width={32}
+                      height={32}
+                    />
                     <AvatarFallback>
                       <User className="size-4" />
                     </AvatarFallback>

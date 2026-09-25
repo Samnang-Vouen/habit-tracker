@@ -1,13 +1,14 @@
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
+// This app never renders a next-themes ThemeProvider or offers a theme
+// toggle, so useTheme() here only ever resolved to its "system" fallback —
+// Sonner already supports theme="system" natively, so the whole
+// next-themes dependency (and its context lookup) was dead weight.
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="system"
       className="toaster group"
       icons={{
         success: (
